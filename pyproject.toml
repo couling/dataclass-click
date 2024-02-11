@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "dataclass-click"
+version = "0.1.0"
+description = "Use PEP 593 annotations to define click options and arguments"
+authors = ["Philip Couling <couling@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+click = "^8.0.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.0"
+coverage = "^7.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.run]
+source = [
+    "dataclass_click",
+]
