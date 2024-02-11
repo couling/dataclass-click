@@ -1,0 +1,79 @@
+name: Release Request
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
+
+      - name: Set Project Version
+        shell: bash
+        run: |
+          version_ref="${{github.ref}}"
+          poetry version "${version_ref#refs/tags/}"
+
+      - name: Build
+        run: poetry build
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+
+  attach-to-release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to GitHub release page
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "dist/*"
+          file_glob: true
+          tag: ${{ github.ref }}
+
+
+  upload-to-pypi:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: test-pypi
+      url: https://test.pypi.org/p/dataclass-click
+
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Upload to Pypi
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

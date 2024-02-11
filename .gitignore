@@ -1,0 +1,10 @@
+venv
+.venv
+__pycache__
+temp_example
+dist
+.mypy_cache
+.pytest_cache
+.idea
+.coverage
+htmlcov
