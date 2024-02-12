@@ -114,7 +114,8 @@ def dataclass_click(
                 value = kwargs.pop(key, DONT_PASS)
                 if value is not DONT_PASS:
                     arg_class_args[key] = value
-            arg_class_object = factory(**arg_class_args)
+
+            arg_class_object = factory_(**arg_class_args)  # type: ignore
             if kw_name is not None:
                 kwargs[kw_name] = arg_class_object
             else:
@@ -127,11 +128,11 @@ def dataclass_click(
 
         return wrapper
 
-    if factory is None:
-        factory = arg_class
+    factory_ = factory if factory is not None else arg_class
     annotations = _collect_click_annotations(arg_class)
     _patch_names(annotations)
     _patch_click_types(arg_class, annotations, type_inferences)
+    _patch_required(arg_class, annotations)
     return decorator
 
 

@@ -13,6 +13,7 @@ _TYPE_INFERENCES = {
     Path: Path(".."),
 }
 
+
 @pytest.fixture(params=_TYPE_INFERENCES, ids=lambda claz: claz.__name__)
 def inferrable_type(request):
     return request.param

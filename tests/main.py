@@ -4,6 +4,7 @@ from dataclass_click import option, argument, dataclass_click
 from dataclasses import dataclass
 from typing import Annotated
 
+
 @dataclass
 class Config:
     foo: Annotated[str, argument()]
@@ -15,6 +16,7 @@ class Config:
 @dataclass_click(Config)
 def main(config: Config):
     ...
+
 
 if __name__ == "__main__":
     main()

@@ -39,3 +39,4 @@ split_before_first_argument = true
 
 [tool.mypy]
 packages = ["dataclass_click"]
+check_untyped_defs = true
