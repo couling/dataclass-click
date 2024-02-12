@@ -92,7 +92,7 @@ class Config:
     d: Annotated[float, option()]     # click.FLOAT
     e: Annotated[UUID, option()]      # click.UUID
     f: Annotated[datetime, option()]  # click.DateTime()
-    g: Annotated[Path, option]        # click.Path(path_type=Path)
+    g: Annotated[Path, option()]      # click.Path(path_type=Path)
 ```
 
 #### Extending it...
