@@ -2,7 +2,7 @@
 
 Structure your click arguments.
 
-dataclass-click lets you move your user arguments from kwargs to dataclasses, keeping things self contained.
+dataclass-click lets you move your user arguments from kwargs to dataclasses, keeping things self-contained.
 
 Click is pretty simple to start with, but when your programs get complex with command groups and large numbers of shared
 arguments, you find yourself repeating a lot of work.
@@ -24,7 +24,7 @@ from dataclass_click import argument, dataclass_click, option
 @dataclass
 class Config:
     target: Annotated[Path, argument()]  # Auto-inferred type for built-in click types
-    foo: Annotated[float, option(required=True)]  # Auto-inferrd option names
+    foo: Annotated[float, option(required=True)]  # Auto-inferred option names
     bar: Annotated[int | None, option("--other")] # Automatically map mismatched names
 
 
