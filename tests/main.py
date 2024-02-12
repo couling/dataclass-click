@@ -1,21 +1,20 @@
-import logging
-
 import click
-from dataclass_click import dataclass_click
 
-from tests.logging_configuration import LoggingConfig, configure_logging
+from dataclass_click import option, argument, dataclass_click
+from dataclasses import dataclass
+from typing import Annotated
+
+@dataclass
+class Config:
+    foo: Annotated[str, argument()]
+    bar: Annotated[str, option()]
+    baz: Annotated[str, option("--bonno")]
 
 
-logger = logging.getLogger(__name__)
+@click.command()
+@dataclass_click(Config)
+def main(config: Config):
+    ...
 
-
-@click.group()
-@click.argument("SOME_ARGUMENT")
-@dataclass_click(LoggingConfig, kw_name="logging_config")
-def main(logging_config: LoggingConfig, some_argument: str):
-    configure_logging(logging_config)
-    logger.debug("Starting up")
-    logger.info("%s", some_argument)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
