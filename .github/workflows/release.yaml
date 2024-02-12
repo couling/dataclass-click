@@ -61,8 +61,8 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: test-pypi
-      url: https://test.pypi.org/p/dataclass-click
+      name: pypi
+      url: https://pypi.org/p/dataclass-click
 
     permissions:
       id-token: write
