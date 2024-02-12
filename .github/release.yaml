@@ -1,0 +1,17 @@
+changelog:
+  exclude:
+    labels:
+      - cosmetic
+  categories:
+    - title: ⚠️ Breaking Changes
+      labels:
+        - breaking-change
+    - title: ⚙️ New Features
+      labels:
+        - enhancement
+    - title: 🐛 Bugfixes
+      labels:
+        - bug
+    - title: Other Changes
+      labels:
+        - "*"
