@@ -231,7 +231,10 @@ def _collect_click_annotations(arg_class: typing.Type[Arg]) -> dict[str, _Delaye
                 if isinstance(annotation, _DelayedCall):
                     annotations[key] = annotation
                     break
-    return annotations
+    return {
+        key: dataclasses.replace(annotation, kwargs=annotation.kwargs.copy())
+        for key, annotation in annotations.items()
+    }
 
 
 def _option_name(attribute_name: str) -> str:

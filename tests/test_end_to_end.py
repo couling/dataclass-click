@@ -130,3 +130,19 @@ def test_inferred_required(args: dict[str, Any], expect: int):
         pass
 
     quick_run(main, expect_exit_code=expect)
+
+
+def test_dataclass_can_be_used_twice():
+    @dataclass
+    class Config:
+        imply_required: Annotated[int, option()]
+
+    @click.command()
+    @dataclass_click(Config)
+    def main_1(*args, **kwargs):
+        pass
+
+    @click.command()
+    @dataclass_click(Config)
+    def main_2(*args, **kwargs):
+        pass
