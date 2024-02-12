@@ -124,3 +124,34 @@ DECIMAL = DecimalParameterType()
 # Extend type inference to add Decimal
 dataclass_click.register_type_inference(Decimal, DECIMAL)
 ```
+
+
+### Required Inference
+
+To avoid tricky mismatches between required options and optional attributues, dataclass-click will infer a field is 
+required if neither `default=` nor `required=` are explicitly set and the attribute type hint is not optional:
+
+```python
+from dataclasses import dataclass
+from typing import Annotated
+
+from dataclass_click import option
+
+@dataclass
+class Config:
+    foo: Annotated[str, option()]
+    bar: Annotated[str | None, option(required=True)] # Will never actually be None
+    baz: Annotated[str, option(default="no")]
+    bob: Annotated[str, option(required=False)]  # If you want to shoot yourself in the foot...
+```
+
+```
+Usage: main.py [OPTIONS]
+
+Options:
+  --bob TEXT
+  --baz TEXT
+  --bar TEXT  [required]
+  --foo TEXT  [required]
+  --help      Show this message and exit.
+```
