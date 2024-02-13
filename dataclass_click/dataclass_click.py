@@ -79,7 +79,7 @@ def dataclass_click(
 
     arg_class can be any class type as long as annotations can be extracted with inspect.  Either the arg_class
     constructor must accept kwarg arguments to match annotated field names (default for a @dataclass), or a factory
-    function (callable object) must be passed that accepts those kwarguments and returns an object of arg_class.
+    function (callable object) must be passed that accepts those kwargs and returns an object of arg_class.
 
     Note that newer annotation types such as PEP 655 ``Required[]`` and ``NotRequired[]`` annotations not
     well-supported: ``Annotated`` must be the outermost annotation and other such annotations like ``Required`` and
@@ -170,7 +170,7 @@ def _patch_click_types(
     for key, annotation in annotations.items():
         hint: typing.Type[Any]
         _, hint = _strip_optional(type_hints[key])
-        if "type" not in annotation.kwargs and  not annotation.kwargs.get("is_flag", False):
+        if "type" not in annotation.kwargs and not annotation.kwargs.get("is_flag", False):
             if hint in complete_type_inferences:
                 annotation.kwargs["type"] = complete_type_inferences[hint]
             else:
