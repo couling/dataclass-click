@@ -1,7 +1,7 @@
 changelog:
   exclude:
     labels:
-      - cosmetic
+      - dont-mention
   categories:
     - title: ⚠️ Breaking Changes
       labels:
@@ -12,6 +12,9 @@ changelog:
     - title: 🐛 Bugfixes
       labels:
         - bug
+    - title: 💋 Cosmetic Changes
+      labels:
+        - cosmetic
     - title: Other Changes
       labels:
         - "*"
