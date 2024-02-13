@@ -9,7 +9,6 @@ __all__ = [
 
 import dataclasses
 import functools
-import inspect
 import operator
 import types
 import typing
@@ -225,7 +224,7 @@ def _collect_click_annotations(arg_class: typing.Type[Arg]) -> dict[str, _Delaye
     :param arg_class: Dataclass to analyze
     :return: A dictionary _DelayedCall keyed by attribute names"""
     annotations: dict[str, _DelayedCall] = {}
-    for key, value in inspect.get_annotations(arg_class).items():
+    for key, value in typing.get_type_hints(arg_class, include_extras=True).items():
         if typing.get_origin(value) is typing.Annotated:
             for annotation in typing.get_args(value):
                 if isinstance(annotation, _DelayedCall):
