@@ -1,11 +1,14 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Annotated, Any
-import io
+
 import click
 import pytest
 from click.testing import CliRunner
 
-from dataclass_click import dataclass_click, option
+from dataclass_click import _dataclass_click, dataclass_click, option, register_type_inference
+
+CallRecord = tuple[tuple[Any, ...], dict[str, Any]]
 
 
 def quick_run(command, *args: str, expect_exit_code: int = 0) -> None:
@@ -29,7 +32,7 @@ def test_extra_args_are_passed_through():
     def main(*args, **kwargs):
         results.append((args, kwargs))
 
-    results = []
+    results: list[CallRecord] = []
     quick_run(main, "--foo", "a", "--bar", "b", "--baz", "c")
     assert results == [((Config(foo="a"), ), {"bar": "b", "baz": "c"})]
 
@@ -38,14 +41,14 @@ def test_types_can_be_inferred(inferrable_type, example_value_for_inferrable_typ
 
     @dataclass
     class Config:
-        foo: Annotated[inferrable_type, option("--foo")]
+        foo: Annotated[inferrable_type, option("--foo")]  # type: ignore
 
     @click.command()
     @dataclass_click(Config)
     def main(*args, **kwargs):
         results.append((args, kwargs))
 
-    results = []
+    results: list[CallRecord] = []
     if hasattr(example_value_for_inferrable_type, "isoformat"):
         str_value = example_value_for_inferrable_type.isoformat()
     else:
@@ -104,7 +107,7 @@ def test_inferred_option_name():
     def main(*args, **kwargs):
         results.append((args, kwargs))
 
-    results = []
+    results: list[CallRecord] = []
     quick_run(main, "--foo", "10")
     assert results == [((Config(foo=10), ), {})]
 
@@ -121,18 +124,20 @@ def test_mapped_option_name():
     def main(*args, **kwargs):
         results.append((args, kwargs))
 
-    results = []
+    results: list[CallRecord] = []
     quick_run(main, "--foo", "10")
     assert results == [((Config(baz=10), ), {})]
 
 
-@pytest.mark.parametrize(["args", "expect"], [
-    ({}, 2),
-    ({"required": True}, 2),
-    ({"required": False}, 0),
-    ({"default": 10}, 0),
-    ({"default": 10, "required": False}, 0)
-], ids=["neither", "required-true", "required-false", "default", "both"])
+@pytest.mark.parametrize(
+    ["args", "expect"], [
+        ({}, 2),
+        ({"required": True}, 2),
+        ({"required": False}, 0),
+        ({"default": 10}, 0),
+        ({"default": 10, "required": False}, 0),
+    ],
+    ids=["neither", "required-true", "required-false", "default", "both"])
 def test_inferred_required(args: dict[str, Any], expect: int):
 
     @dataclass
@@ -147,14 +152,13 @@ def test_inferred_required(args: dict[str, Any], expect: int):
     quick_run(main, expect_exit_code=expect)
 
 
-@pytest.mark.parametrize(["args", "expect"], [
-    ({}, 0),
-    ({"required": True}, 2),
-    ({"required": False}, 0),
-    ({"default": 10}, 0),
-    ({"default": 10, "required": False}, 0)
-], ids=["neither", "required-true", "required-false", "default", "both"])
-def test_inferred_required(args: dict[str, Any], expect: int):
+@pytest.mark.parametrize(
+    ["args", "expect"], [
+        ({}, 0), ({"required": True}, 2), ({"required": False}, 0), ({"default": 10}, 0),
+        ({"default": 10, "required": False}, 0)
+    ],
+    ids=["neither", "required-true", "required-false", "default", "both"])
+def test_inferred_not_required(args: dict[str, Any], expect: int):
 
     @dataclass
     class Config:
@@ -168,7 +172,38 @@ def test_inferred_required(args: dict[str, Any], expect: int):
     quick_run(main, expect_exit_code=expect)
 
 
+class DecimalParamType(click.ParamType):
+
+    def convert(self, value: Any, param: click.Parameter | None, ctx: click.Context | None) -> Decimal:
+        if isinstance(value, Decimal):
+            return value
+        return Decimal(value)
+
+
+def test_patch_type_inference(monkeypatch):
+    monkeypatch.setattr(_dataclass_click, "_TYPE_INFERENCE", _dataclass_click._TYPE_INFERENCE.copy())
+
+    @dataclass
+    class Config:
+        imply_required: Annotated[Decimal, option()]
+
+    with pytest.raises(TypeError):
+
+        @click.command()
+        @dataclass_click(Config)
+        def main(*args, **kwargs):
+            pass
+
+    register_type_inference(Decimal, DecimalParamType())
+
+    @click.command()
+    @dataclass_click(Config)
+    def main_2(*args, **kwargs):
+        pass
+
+
 def test_dataclass_can_be_used_twice():
+
     @dataclass
     class Config:
         imply_required: Annotated[int, option()]
@@ -182,3 +217,19 @@ def test_dataclass_can_be_used_twice():
     @dataclass_click(Config)
     def main_2(*args, **kwargs):
         pass
+
+
+def test_keyword_name():
+
+    @dataclass
+    class Config:
+        bar: Annotated[int | None, option()]
+
+    @click.command()
+    @dataclass_click(Config, kw_name="foo")
+    def main(*args, **kwargs):
+        results.append((args, kwargs))
+
+    results: list[CallRecord] = []
+    quick_run(main)
+    assert results == [((), {"foo": Config(bar=None)})]

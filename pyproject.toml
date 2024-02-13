@@ -37,7 +37,11 @@ source = [
 based_on_style = "pep8"
 column_limit = 120
 split_before_first_argument = true
+each_dict_entry_on_separate_line = false
 
 [tool.mypy]
-packages = ["dataclass_click"]
+packages = [
+    "dataclass_click",
+    "tests",
+]
 check_untyped_defs = true
