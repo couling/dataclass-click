@@ -56,6 +56,42 @@ def test_types_can_be_inferred(inferrable_type, example_value_for_inferrable_typ
     assert isinstance(results[0][0][0].foo, inferrable_type)
 
 
+@pytest.mark.parametrize("args", [{}, {"is_flag": False}], ids=["no_args", "is_flag_false"])
+def test_type_inference_raises(args: dict[str, Any]):
+
+    class UnknownClass:
+        pass
+
+    @dataclass
+    class Config:
+        foo: Annotated[UnknownClass, option(**args)]
+
+    with pytest.raises(TypeError):
+
+        @click.command()
+        @dataclass_click(Config)
+        def main(*args, **kwargs):
+            pass
+
+
+@pytest.mark.parametrize("args", [{"type": click.INT}, {"is_flag": True}], ids=["type", "is_flag_true"])
+def test_types_not_inferred(args: dict[str, Any]):
+
+    class UnknownClass:
+        pass
+
+    @dataclass
+    class Config:
+        foo: Annotated[UnknownClass, option(**args)]
+
+    # Make sure no exception is raised.
+    # See test_type_inference_raises() for the counter example
+    @click.command()
+    @dataclass_click(Config)
+    def main(*args, **kwargs):
+        pass
+
+
 def test_inferred_option_name():
     """Test that the option name can be inferred from the attribute name"""
 
