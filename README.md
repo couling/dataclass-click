@@ -149,15 +149,15 @@ class Config:
     bar: Annotated[str | None, option()]
     
     # No inference performed because required= is set.
-    bar: Annotated[str | None, option(required=True)]
+    baz: Annotated[str | None, option(required=True)]
     
     # Infer not required because default= set.
-    baz: Annotated[str, option(default="no")]
+    bob: Annotated[str, option(default="no")]
     
     # If you want to shoot yourself in the foot, you can!
     # Not inferred because required=False.  
     # Click will pass None even though the attribute is not optional
-    bob: Annotated[str, option(required=False)]  
+    bonno: Annotated[str, option(required=False)]  
 ```
 
 ```
@@ -165,8 +165,9 @@ Usage: main.py [OPTIONS]
 
 Options:
   --bob TEXT
-  --baz TEXT
-  --bar TEXT  [required]
+  --baz TEXT  [required]
+  --bar TEXT
   --foo TEXT  [required]
+  --bonno
   --help      Show this message and exit.
 ```
