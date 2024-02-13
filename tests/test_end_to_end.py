@@ -233,3 +233,23 @@ def test_keyword_name():
     results: list[CallRecord] = []
     quick_run(main)
     assert results == [((), {"foo": Config(bar=None)})]
+
+
+def test_inheritance():
+
+    @dataclass()
+    class Parent:
+        foo: Annotated[int | None, option()]
+
+    @dataclass
+    class Config(Parent):
+        bar: Annotated[int | None, option()]
+
+    @click.command()
+    @dataclass_click(Config)
+    def main(*args, **kwargs):
+        results.append((args, kwargs))
+
+    results: list[CallRecord] = []
+    quick_run(main, "--foo", "10", "--bar", "20")
+    assert results == [((Config(foo=10, bar=20), ), {})]
