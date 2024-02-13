@@ -4,8 +4,8 @@ Structure your click arguments.
 
 dataclass-click lets you move your user arguments from kwargs to dataclasses, keeping things self-contained.
 
-Click is pretty simple to start with, but when your programs get complex with command groups and large numbers of shared
-arguments, you find yourself repeating a lot of work.
+Click is pretty simple to start with, but when your program gets complex, you find yourself repeating a lot of work.
+This is particularly true if you have command groups with shared arguments.
 
 The idea of `dataclass-click` is to move the `@option` and `@argument` decorators off into annotations on dataclasses 
 and pass dataclass objects instead of kwargs.
@@ -23,15 +23,20 @@ from dataclass_click import argument, dataclass_click, option
 
 @dataclass
 class Config:
-    target: Annotated[Path, argument()]  # Auto-inferred type for built-in click types
-    foo: Annotated[float, option(required=True)]  # Auto-inferred option names
-    bar: Annotated[int | None, option("--other")] # Automatically map mismatched names
+    # Auto-inferred type for built-in click types
+    target: Annotated[Path, argument()]  
+    
+    # Auto-inferred option names
+    foo: Annotated[float, option(required=True)]
+    
+    # Automatically map mismatched names
+    bar: Annotated[int | None, option("--other")]
 
 
 @click.command()
 @dataclass_click(Config)
 def main(config: Config):
-    # All your args neatly packaged.
+    # All args neatly packaged.
     print(config.target, config.foo, config.bar)
     print(list(config.target.iterdir())) 
 ```
@@ -40,10 +45,8 @@ def main(config: Config):
 
 ### Name inference
 
-The pythonic name for options and attributes is automatically taken from the dataclass attribute name.
-options can then be named whatever you want.
-
-If you don't specify an option name, it will be inferred for you
+The pythonic name for options and attributes is copied from the dataclass attribute name.
+Options can then be named whatever you want. If you don't specify an option name, it will be inferred for you:
 
 ```python
 from dataclasses import dataclass
@@ -97,8 +100,8 @@ class Config:
 
 #### Extending it...
 
-This is extensible a program can add and even change the default click ParameterTypes associated with a python data 
-type.  Eg: if you want to add a decimal
+Type inference is extensible so a program can add and even change the default click ParameterTypes associated with a 
+Python data type.  Eg: if you want to add a `Decimal`:
 
 ```python
 from decimal import Decimal
@@ -128,7 +131,7 @@ dataclass_click.register_type_inference(Decimal, DECIMAL)
 
 ### Required Inference
 
-To avoid tricky mismatches between required options and optional attributues, dataclass-click will infer a field is 
+To avoid tricky mismatches between required options and optional attributes, dataclass-click will infer a field is 
 required if neither `default=` nor `required=` are explicitly set and the attribute type hint is not optional:
 
 ```python
@@ -139,10 +142,22 @@ from dataclass_click import option
 
 @dataclass
 class Config:
+    # Infer --foo is required because str is not optional
     foo: Annotated[str, option()]
-    bar: Annotated[str | None, option(required=True)] # Will never actually be None
+    
+    # Infer --bar is not required because str | None is optional
+    bar: Annotated[str | None, option()]
+    
+    # No inference performed because required= is set.
+    bar: Annotated[str | None, option(required=True)]
+    
+    # Infer not required because default= set.
     baz: Annotated[str, option(default="no")]
-    bob: Annotated[str, option(required=False)]  # If you want to shoot yourself in the foot...
+    
+    # If you want to shoot yourself in the foot, you can!
+    # Not inferred because required=False.  
+    # Click will pass None even though the attribute is not optional
+    bob: Annotated[str, option(required=False)]  
 ```
 
 ```
