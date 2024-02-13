@@ -170,7 +170,7 @@ def _patch_click_types(
     for key, annotation in annotations.items():
         hint: typing.Type[Any]
         _, hint = _strip_optional(type_hints[key])
-        if "type" not in annotation.kwargs:
+        if "type" not in annotation.kwargs and  not annotation.kwargs.get("is_flag", False):
             if hint in complete_type_inferences:
                 annotation.kwargs["type"] = complete_type_inferences[hint]
             else:
