@@ -253,3 +253,9 @@ def test_inheritance():
     results: list[CallRecord] = []
     quick_run(main, "--foo", "10", "--bar", "20")
     assert results == [((Config(foo=10, bar=20), ), {})]
+
+
+def test_mypy_check_loads():
+    """Check that mypy_check.py will parse by python"""
+    from . import mypy_check
+    assert mypy_check
