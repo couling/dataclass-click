@@ -15,7 +15,7 @@ import typing
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, overload, Concatenate
 from uuid import UUID
 
 import click
@@ -68,12 +68,27 @@ DONT_PASS = DontPassType.DONT_PASS
 This allows using the dataclass own default value instead of a click default."""
 
 
+@overload
+def dataclass_click(
+    arg_class: typing.Type[Arg],
+    *,
+    type_inferences: InferenceType | None = None,
+    factory: Callable[..., Arg] | None = None
+) -> Callable[[Callable[Concatenate[Arg, Param], RetType]], Callable[..., RetType]]:
+    ...
+
+
+@overload
 def dataclass_click(
         arg_class: typing.Type[Arg],
         *,
-        kw_name: str | None = None,
+        kw_name: str | None,
         type_inferences: InferenceType | None = None,
-        factory: Callable[..., Arg] | None = None) -> Callable[[Callable[[Arg], RetType]], Callable[..., RetType]]:
+        factory: Callable[..., Arg] | None = None) -> Callable[[Callable[Param, RetType]], Callable[Param, RetType]]:
+    ...
+
+
+def dataclass_click(arg_class, *, kw_name=None, type_inferences=None, factory=None):
     """Decorator to add options and arguments, collecting the results into a dataclass object instead of many kwargs
 
     arg_class can be any class type as long as annotations can be extracted with inspect.  Either the arg_class
