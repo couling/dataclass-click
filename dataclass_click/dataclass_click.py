@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Callable, overload, Concatenate
 from uuid import UUID
 
-import click
+import click.core
 
 Param = typing.ParamSpec("Param")
 RetType = typing.TypeVar("RetType")
@@ -184,11 +184,38 @@ def _patch_click_types(
     for key, annotation in annotations.items():
         hint: typing.Type[Any]
         _, hint = _strip_optional(type_hints[key])
-        if "type" not in annotation.kwargs and not annotation.kwargs.get("is_flag", False):
-            if hint in complete_type_inferences:
-                annotation.kwargs["type"] = complete_type_inferences[hint]
+        if "type" not in annotation.kwargs:
+            stub: click.core.Option | click.core.Argument
+            if annotation.callable is click.option:
+                stub = click.core.Option(annotation.args, **annotation.kwargs)
+                if stub.is_flag:
+                    continue
+            else:
+                stub = click.core.Argument(annotation.args, **annotation.kwargs)
+            annotation.kwargs["type"] = _eval_type(key, hint, stub, complete_type_inferences)
+
+
+def _eval_type(
+        key: str, hint: typing.Type[Any], stub: click.core.Option | click.core.Argument,
+        inferences: InferenceType) -> click.ParamType | tuple[click.ParamType, ...]:
+    try:
+        hint_origin = typing.get_origin(hint)
+        hint_args = typing.get_args(hint)
+        if stub.multiple or stub.nargs == -1:
+            if hint_origin is tuple and len(hint_args) == 2 and hint_args[1] is ...:
+                hint = hint_args[0]
+                hint_origin = typing.get_origin(hint)
+                hint_args = typing.get_args(hint)
             else:
                 raise TypeError(f"Could not infer ParamType for {key} type {hint!r}. Explicitly annotate type=<type>")
+        if stub.nargs > 1:
+            if hint_origin is tuple:
+                return tuple(inferences[hint_arg] for hint_arg in hint_args)
+        else:
+            return inferences[hint]
+    except (KeyError, IndexError):
+        pass
+    raise TypeError(f"Could not infer ParamType for {key} type {hint!r}. Explicitly annotate type=<type>")
 
 
 def _patch_required(arg_class: typing.Type[Arg], annotations: dict[str, _DelayedCall]) -> None:
@@ -205,8 +232,13 @@ def _patch_required(arg_class: typing.Type[Arg], annotations: dict[str, _Delayed
         is_optional, hint = _strip_optional(type_hints[key])
         if not is_optional:
             if annotation.callable is click.option:
+                # If required or default set directly.
                 if "required" not in annotation.kwargs and "default" not in annotation.kwargs:
-                    annotation.kwargs["required"] = True
+                    # Stub uses click's parser rather than trying to second guess how click will behave
+                    # If click would imply is_flag or multiple
+                    stub = click.core.Option(annotation.args, **annotation.kwargs)
+                    if not stub.is_flag and not stub.multiple:
+                        annotation.kwargs["required"] = True
 
 
 def _strip_optional(attribute_type: typing.Type[_T]) -> tuple[bool, typing.Type[_T]]:
