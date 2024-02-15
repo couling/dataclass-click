@@ -6,7 +6,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from dataclass_click import _dataclass_click, dataclass_click, option, register_type_inference
+from dataclass_click import _dataclass_click, dataclass_click, option, argument, register_type_inference
 
 CallRecord = tuple[tuple[Any, ...], dict[str, Any]]
 
@@ -59,7 +59,60 @@ def test_types_can_be_inferred(inferrable_type, example_value_for_inferrable_typ
     assert isinstance(results[0][0][0].foo, inferrable_type)
 
 
-@pytest.mark.parametrize("args", [{}, {"is_flag": False}], ids=["no_args", "is_flag_false"])
+@pytest.mark.parametrize("input_type", [option(multiple=True), argument(nargs=-1)], ids=["option", "argument"])
+def test_multiple_types_can_be_inferred(inferrable_type, example_value_for_inferrable_type, input_type):
+
+    @dataclass
+    class Config:
+        foo: Annotated[tuple[inferrable_type, ...], input_type]
+
+    @click.command()
+    @dataclass_click(Config)
+    def main(*args, **kwargs):
+        results.append((args, kwargs))
+
+    results: list[CallRecord] = []
+    if hasattr(example_value_for_inferrable_type, "isoformat"):
+        str_value = example_value_for_inferrable_type.isoformat()
+    else:
+        str_value = str(example_value_for_inferrable_type)
+    if input_type.callable is click.option:
+        quick_run(main, "--foo", str_value, "--foo", str_value)
+    else:
+        quick_run(main, str_value, str_value)
+    assert results == [((Config(foo=(example_value_for_inferrable_type, example_value_for_inferrable_type)), ), {})]
+
+
+@pytest.mark.parametrize("input_type", [option(nargs=2), argument(nargs=2)], ids=["option", "argument"])
+def test_nargs_types_can_be_inferred(inferrable_type, example_value_for_inferrable_type, input_type):
+
+    @dataclass
+    class Config:
+        foo: Annotated[tuple[inferrable_type, inferrable_type], input_type]
+
+    @click.command()
+    @dataclass_click(Config)
+    def main(*args, **kwargs):
+        results.append((args, kwargs))
+
+    results: list[CallRecord] = []
+    if hasattr(example_value_for_inferrable_type, "isoformat"):
+        str_value = example_value_for_inferrable_type.isoformat()
+    else:
+        str_value = str(example_value_for_inferrable_type)
+    if input_type.callable is click.option:
+        quick_run(main, "--foo", str_value, str_value)
+    else:
+        quick_run(main, str_value, str_value)
+    assert results == [((Config(foo=(example_value_for_inferrable_type, example_value_for_inferrable_type)), ), {})]
+
+
+@pytest.mark.parametrize(
+    "args", [
+        {},
+        {"is_flag": False},
+        {"multiple": True},
+    ], ids=["no_args", "is_flag_false", "multiple"])
 def test_type_inference_raises(args: dict[str, Any]):
 
     class UnknownClass:
@@ -154,8 +207,11 @@ def test_inferred_required(args: dict[str, Any], expect: int):
 
 @pytest.mark.parametrize(
     ["args", "expect"], [
-        ({}, 0), ({"required": True}, 2), ({"required": False}, 0), ({"default": 10}, 0),
-        ({"default": 10, "required": False}, 0)
+        ({}, 0),
+        ({"required": True}, 2),
+        ({"required": False}, 0),
+        ({"default": 10}, 0),
+        ({"default": 10, "required": False}, 0),
     ],
     ids=["neither", "required-true", "required-false", "default", "both"])
 def test_inferred_not_required(args: dict[str, Any], expect: int):
