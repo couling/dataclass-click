@@ -64,7 +64,7 @@ def test_multiple_types_can_be_inferred(inferrable_type, example_value_for_infer
 
     @dataclass
     class Config:
-        foo: Annotated[tuple[inferrable_type, ...], input_type]
+        foo: Annotated[tuple[inferrable_type, ...], input_type]  # type: ignore
 
     @click.command()
     @dataclass_click(Config)
@@ -88,7 +88,7 @@ def test_nargs_types_can_be_inferred(inferrable_type, example_value_for_inferrab
 
     @dataclass
     class Config:
-        foo: Annotated[tuple[inferrable_type, inferrable_type], input_type]
+        foo: Annotated[tuple[inferrable_type, inferrable_type], input_type]  # type: ignore
 
     @click.command()
     @dataclass_click(Config)
