@@ -136,7 +136,7 @@ def dataclass_click(arg_class, *, kw_name=None, type_inferences=None, factory=No
                 args = (arg_class_object, *args)
             return func(*args, **kwargs)
 
-        for annotation in annotations.values():
+        for annotation in reversed(annotations.values()):
             delayed_decorator = annotation.callable(*annotation.args, **annotation.kwargs)
             wrapper = delayed_decorator(wrapper)
 
