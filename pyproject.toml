@@ -8,9 +8,15 @@ authors = [
 readme = "README.md"
 repository = "https://github.com/couling/dataclass-click"
 requires-python = ">=3.10"
+dependencies = [
+    "click>8.0.0,<9"
+]
+classifiers = [
+    "License :: OSI Approved :: BSD License"
+]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<=3.13"
 click = "^8.0.0"
 
 [tool.poetry.group.test.dependencies]
