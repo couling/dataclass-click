@@ -5,10 +5,13 @@ description = "Use PEP 593 annotations to define click options and arguments"
 authors = ["Philip Couling <couling@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/couling/dataclass-click"
+dependencies = [
+    "click>=8,<9",
+]
+requires-python = ">=3.10"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-click = "^8.0.0"
+python = ">=3.10,<3.13"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
