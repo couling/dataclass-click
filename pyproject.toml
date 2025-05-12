@@ -1,17 +1,17 @@
-[tool.poetry]
+[project]
 name = "dataclass-click"
 version = "0.0.0"  # Replaced in CI pipeline
 description = "Use PEP 593 annotations to define click options and arguments"
-authors = ["Philip Couling <couling@gmail.com>"]
+authors = [
+    {name = "Philip Couling", email = "couling@gmail.com"},
+]
 readme = "README.md"
 repository = "https://github.com/couling/dataclass-click"
-dependencies = [
-    "click>=8,<9",
-]
 requires-python = ">=3.10"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
+click = "^8.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
