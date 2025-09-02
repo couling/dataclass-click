@@ -185,7 +185,7 @@ def _patch_click_types(
         hint: typing.Type[Any]
         _, hint = _strip_optional(type_hints[key])
         if "type" not in annotation.kwargs:
-            stub = _build_stab(annotation)
+            stub = _build_stub(annotation)
             if hasattr(stub, "is_flag") and stub.is_flag:
                 continue
             annotation.kwargs["type"] = _eval_type(key, hint, stub, complete_type_inferences)
@@ -214,7 +214,7 @@ def _eval_type(
     raise TypeError(f"Could not infer ParamType for {key} type {hint!r}. Explicitly annotate type=<type>")
 
 
-def _build_stab(annotation: _DelayedCall) -> click.core.Option | click.core.Argument:
+def _build_stub(annotation: _DelayedCall) -> click.core.Option | click.core.Argument:
     """Stub uses click's parser rather than trying to second guess how click will behave."""
     if "cls" in annotation.kwargs:
         return annotation.kwargs["cls"](
@@ -246,7 +246,7 @@ def _patch_required(arg_class: typing.Type[Arg], annotations: dict[str, _Delayed
             if annotation.callable is click.option:
                 # If required or default set directly.
                 if "required" not in annotation.kwargs and "default" not in annotation.kwargs:
-                    stub = _build_stab(annotation)
+                    stub = _build_stub(annotation)
                     if not isinstance(stub, click.core.Option):
                         raise TypeError(f"Expected click.core.Option or its subclass, got {stub!r}")
                     # If click would imply is_flag or multiple
