@@ -213,12 +213,14 @@ def _eval_type(
         pass
     raise TypeError(f"Could not infer ParamType for {key} type {hint!r}. Explicitly annotate type=<type>")
 
+
 def _build_stab(annotation: _DelayedCall) -> click.core.Option | click.core.Argument:
     """Stub uses click's parser rather than trying to second guess how click will behave."""
     if "cls" in annotation.kwargs:
         return annotation.kwargs["cls"](
             annotation.args,
-            **{k: v for k, v in annotation.kwargs.items() if k != "cls"},
+            **{k: v
+               for k, v in annotation.kwargs.items() if k != "cls"},
         )
 
     if annotation.callable is click.option:

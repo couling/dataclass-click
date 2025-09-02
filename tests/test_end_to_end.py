@@ -316,13 +316,18 @@ def test_mypy_check_loads():
     from . import mypy_check
     assert mypy_check
 
+
 def test_cls_kwarg():
+
     class MutexOption(click.Option):
+
         def __init__(self, *args, **kwargs):
             self.not_required_if: list[str] = kwargs.pop("not_required_if")
 
             assert self.not_required_if, "'not_required_if' parameter required"
-            kwargs["help"] = f"{kwargs.get('help', '')} Option is mutually exclusive with {', '.join(self.not_required_if)}.".strip()
+            kwargs[
+                "help"] = f"{kwargs.get('help', '')} Option is mutually exclusive with {', '.join(self.not_required_if)}.".strip(
+                )
             super().__init__(*args, **kwargs)
 
         def handle_parse_result(self, ctx, opts, args):
@@ -332,6 +337,7 @@ def test_cls_kwarg():
             return super().handle_parse_result(ctx, opts, args)
 
     class MutexArgument(click.Argument):
+
         def __init__(self, *args, **kwargs):
             self.not_required_if: list[str] = kwargs.pop("not_required_if")
 
@@ -344,12 +350,12 @@ def test_cls_kwarg():
 
             return super().handle_parse_result(ctx, opts, args)
 
-
     @dataclass
     class Config:
         username: Annotated[str | None, option(required=True, cls=MutexOption, not_required_if=["token"])]
         password: Annotated[str | None, option(required=True, cls=MutexOption, not_required_if=["token"])]
-        token: Annotated[str | None, argument(required=True, cls=MutexArgument, not_required_if=["username","password"])]
+        token: Annotated[str | None,
+                         argument(required=True, cls=MutexArgument, not_required_if=["username", "password"])]
 
     @click.command()
     @dataclass_click(Config)
