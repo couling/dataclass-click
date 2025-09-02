@@ -185,13 +185,9 @@ def _patch_click_types(
         hint: typing.Type[Any]
         _, hint = _strip_optional(type_hints[key])
         if "type" not in annotation.kwargs:
-            stub: click.core.Option | click.core.Argument
-            if annotation.callable is click.option:
-                stub = click.core.Option(annotation.args, **annotation.kwargs)
-                if stub.is_flag:
-                    continue
-            else:
-                stub = click.core.Argument(annotation.args, **annotation.kwargs)
+            stub = _build_stab(annotation)
+            if hasattr(stub, "is_flag") and stub.is_flag:
+                continue
             annotation.kwargs["type"] = _eval_type(key, hint, stub, complete_type_inferences)
 
 
@@ -217,6 +213,21 @@ def _eval_type(
         pass
     raise TypeError(f"Could not infer ParamType for {key} type {hint!r}. Explicitly annotate type=<type>")
 
+def _build_stab(annotation: _DelayedCall) -> click.core.Option | click.core.Argument:
+    """Stub uses click's parser rather than trying to second guess how click will behave."""
+    if "cls" in annotation.kwargs:
+        return annotation.kwargs["cls"](
+            annotation.args,
+            **{k: v for k, v in annotation.kwargs.items() if k != "cls"},
+        )
+
+    if annotation.callable is click.option:
+        return click.core.Option(annotation.args, **annotation.kwargs)
+    elif annotation.callable is click.argument:
+        return click.core.Argument(annotation.args, **annotation.kwargs)
+
+    raise TypeError(f"Unknown annotation callable {annotation.callable!r}")
+
 
 def _patch_required(arg_class: typing.Type[Arg], annotations: dict[str, _DelayedCall]) -> None:
     """Default click option to required if typehint is not OPTIONAL
@@ -228,15 +239,15 @@ def _patch_required(arg_class: typing.Type[Arg], annotations: dict[str, _Delayed
     :return: None, annotations are updated in place"""
     type_hints = typing.get_type_hints(arg_class)
     for key, annotation in annotations.items():
-        hint: typing.Type[Any]
-        is_optional, hint = _strip_optional(type_hints[key])
+        is_optional, _ = _strip_optional(type_hints[key])
         if not is_optional:
             if annotation.callable is click.option:
                 # If required or default set directly.
                 if "required" not in annotation.kwargs and "default" not in annotation.kwargs:
-                    # Stub uses click's parser rather than trying to second guess how click will behave
+                    stub = _build_stab(annotation)
+                    if not isinstance(stub, click.core.Option):
+                        raise TypeError(f"Expected click.core.Option or its subclass, got {stub!r}")
                     # If click would imply is_flag or multiple
-                    stub = click.core.Option(annotation.args, **annotation.kwargs)
                     if not stub.is_flag and not stub.multiple:
                         annotation.kwargs["required"] = True
 
