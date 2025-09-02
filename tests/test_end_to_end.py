@@ -325,9 +325,9 @@ def test_cls_kwarg():
             self.not_required_if: list[str] = kwargs.pop("not_required_if")
 
             assert self.not_required_if, "'not_required_if' parameter required"
-            kwargs[
-                "help"] = f"{kwargs.get('help', '')} Option is mutually exclusive with {', '.join(self.not_required_if)}.".strip(
-                )
+            kwargs["help"] = (
+                f"{kwargs.get('help', '')} Option is mutually exclusive with "
+                f"{', '.join(self.not_required_if)}.".strip())
             super().__init__(*args, **kwargs)
 
         def handle_parse_result(self, ctx, opts, args):
