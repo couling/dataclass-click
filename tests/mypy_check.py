@@ -65,6 +65,7 @@ def main_d(a: Config, b: Config2):
 def main_e(a: Config, b: Config2):
     ...
 
+
 @click.command()
 @dataclass_click(Config2)
 @dataclass_click(Config)

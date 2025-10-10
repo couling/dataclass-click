@@ -315,3 +315,57 @@ def test_mypy_check_loads():
     """Check that mypy_check.py will parse by python"""
     from . import mypy_check
     assert mypy_check
+
+
+def test_cls_kwarg():
+
+    class MutexOption(click.Option):
+
+        def __init__(self, *args, **kwargs):
+            self.not_required_if: list[str] = kwargs.pop("not_required_if")
+
+            assert self.not_required_if, "'not_required_if' parameter required"
+            kwargs["help"] = (
+                f"{kwargs.get('help', '')} Option is mutually exclusive with "
+                f"{', '.join(self.not_required_if)}.".strip())
+            super().__init__(*args, **kwargs)
+
+        def handle_parse_result(self, ctx, opts, args):
+            if set(self.not_required_if).intersection(set(opts)):
+                self.required = False
+
+            return super().handle_parse_result(ctx, opts, args)
+
+    class MutexArgument(click.Argument):
+
+        def __init__(self, *args, **kwargs):
+            self.not_required_if: list[str] = kwargs.pop("not_required_if")
+
+            assert self.not_required_if, "'not_required_if' parameter required"
+            super().__init__(*args, **kwargs)
+
+        def handle_parse_result(self, ctx, opts, args):
+            if set(self.not_required_if).intersection(set(opts)):
+                self.required = False
+
+            return super().handle_parse_result(ctx, opts, args)
+
+    @dataclass
+    class Config:
+        username: Annotated[str | None, option(required=True, cls=MutexOption, not_required_if=["token"])]
+        password: Annotated[str | None, option(required=True, cls=MutexOption, not_required_if=["token"])]
+        token: Annotated[str | None,
+                         argument(required=True, cls=MutexArgument, not_required_if=["username", "password"])]
+
+    @click.command()
+    @dataclass_click(Config)
+    def main(*args, **kwargs):
+        results.append((args, kwargs))
+
+    results: list[CallRecord] = []
+    quick_run(main, "--username", "foo", "--password", "bar")
+    assert results == [((Config(username="foo", password="bar", token=None), ), {})]
+
+    results: list[CallRecord] = []
+    quick_run(main, "foo")
+    assert results == [((Config(username=None, password=None, token="foo"), ), {})]
